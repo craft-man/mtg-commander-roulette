@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T17:57:00.0000000+02:00",
+  "title": "Design System: Commander Roulette",
+  "extensions": {
+    "colorMeta": {
+      "forest": { "role": "primary", "displayName": "Workshop Forest", "canonical": "#295a4b", "tonalRamp": ["#122c24", "#194034", "#1f4d40", "#295a4b", "#356c58", "#4f846d", "#82ae95", "#d0e2d5"] },
+      "forest-deep": { "role": "primary", "displayName": "Deep Evergreen", "canonical": "#1f4d40", "tonalRamp": ["#102820", "#173a30", "#1f4d40", "#2b614f", "#467b67", "#6a9b84", "#a6c8b5", "#dfede4"] },
+      "mint": { "role": "secondary", "displayName": "Sleeve Mint", "canonical": "#dcebe2", "tonalRamp": ["#253c31", "#3d5b4d", "#5e7e6e", "#82a291", "#a8c2b2", "#c4d9cc", "#dcebe2", "#f1f8f3"] },
+      "canvas": { "role": "neutral", "displayName": "Paper Canvas", "canonical": "#edf1ed", "tonalRamp": ["#19241e", "#34443b", "#53645b", "#798a80", "#a1afa6", "#c5d0c9", "#edf1ed", "#fbfdfb"] },
+      "surface": { "role": "neutral", "displayName": "Card Surface", "canonical": "#fbfcfa", "tonalRamp": ["#1a271f", "#35463c", "#53665a", "#798b7e", "#a3b2a8", "#c9d3cd", "#e5ebe7", "#fbfcfa"] },
+      "ink": { "role": "neutral", "displayName": "Table Ink", "canonical": "#1d2831", "tonalRamp": ["#10171c", "#1d2831", "#34424a", "#53636a", "#7b898e", "#a5b0b3", "#d3d9d9", "#f4f6f5"] },
+      "danger": { "role": "tertiary", "displayName": "Quiet Red", "canonical": "#9a342c", "tonalRamp": ["#371613", "#5b211c", "#793027", "#9a342c", "#bd574d", "#d9877d", "#edbcb5", "#f9e6e3"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Challenge Display", "purpose": "The empty-state invitation before the first draw." },
+      "headline": { "displayName": "Working Headline", "purpose": "Panel and result-section hierarchy." },
+      "collectionTitle": { "displayName": "Collection Title", "purpose": "The editorial first-draw title beside the Commander Roulette mark." },
+      "body": { "displayName": "Table Body", "purpose": "Instructions, player context, and supporting copy." },
+      "label": { "displayName": "Control Label", "purpose": "Compact, high-confidence action and field labels." }
+    },
+    "shadows": [
+      { "name": "working-panel", "value": "0 16px 40px rgb(44 72 60 / 0.07)", "purpose": "Ambient separation for large working surfaces." },
+      { "name": "commander-card", "value": "0 12px 24px rgb(42 70 59 / 0.09)", "purpose": "Tight elevation for commander cards." },
+      { "name": "commander-card-active", "value": "0 16px 30px rgb(42 70 59 / 0.15)", "purpose": "Hover and focus-within lift for an inspected commander card." }
+    ],
+    "motion": [
+      { "name": "control", "value": "160ms ease", "purpose": "Buttons, menu caret, and field state changes." },
+      { "name": "card", "value": "180ms ease", "purpose": "Commander-card hover elevation." },
+      { "name": "transform", "value": "620ms cubic-bezier(0.2, 0.74, 0.28, 1)", "purpose": "Double-faced card flip." },
+      { "name": "loading-spin", "value": "860ms linear infinite", "purpose": "Initial commander-pool spinner." },
+      { "name": "loading-shimmer", "value": "1.4s ease-in-out infinite", "purpose": "Commander-card skeleton loading." }
+    ],
+    "breakpoints": [
+      { "name": "tablet-stack", "value": "900px" },
+      { "name": "compact-mobile", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Draw Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single strong action that starts a commander draw.",
+      "html": "<button class=\"ds-draw-button\" type=\"button\"><span aria-hidden=\"true\">◆</span> Draw commanders</button>",
+      "css": ".ds-draw-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:52px; padding:0 16px; border:0; border-radius:10px; color:#f7fbf8; background:#295a4b; box-shadow:0 11px 22px rgb(42 90 75 / 0.2); font:760 0.96rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; cursor:pointer; transition:transform 160ms ease, background 160ms ease; } .ds-draw-button:hover { background:#1f4d40; } .ds-draw-button:active { transform:translateY(1px); } .ds-draw-button:focus-visible { outline:3px solid rgb(45 120 97 / 0.45); outline-offset:3px; }"
+    },
+    {
+      "name": "Secondary Action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A low-emphasis action for sharing or rerolling without competing with the draw action.",
+      "html": "<button class=\"ds-secondary-button\" type=\"button\">Reroll all</button>",
+      "css": ".ds-secondary-button { min-height:44px; padding:0 14px; border:1px solid #c5d3cb; border-radius:10px; color:#315e4e; background:transparent; font:760 0.87rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; cursor:pointer; transition:transform 160ms ease, background 160ms ease, border-color 160ms ease; } .ds-secondary-button:hover { border-color:#8eae9f; background:#e5efe9; } .ds-secondary-button:active { transform:translateY(1px); } .ds-secondary-button:focus-visible { outline:3px solid rgb(45 120 97 / 0.45); outline-offset:3px; }"
+    },
+    {
+      "name": "Player Name Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "A dense player-name field that stays readable in a multiplayer setup list.",
+      "html": "<label class=\"ds-player-label\">Player name<input class=\"ds-player-input\" placeholder=\"Player name\" /></label>",
+      "css": ".ds-player-label { display:grid; gap:6px; color:#4f6259; font:700 0.85rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; } .ds-player-input { width:100%; height:44px; padding:0 12px; border:1px solid #d2ddd6; border-radius:10px; outline:0; color:#25312c; background:#fdfefd; font:650 0.95rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; transition:border-color 160ms ease, box-shadow 160ms ease; } .ds-player-input::placeholder { color:#738079; } .ds-player-input:focus { border-color:#2d7861; box-shadow:0 0 0 3px rgb(45 120 97 / 0.17); }"
+    },
+    {
+      "name": "Commander Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A portrait-first card container for a chosen commander and its compact metadata.",
+      "html": "<article class=\"ds-commander-card\"><div class=\"ds-card-art\" aria-label=\"Commander card art\"></div><div class=\"ds-card-content\"><strong>Commander name</strong><span>Color identity</span></div></article>",
+      "css": ".ds-commander-card { overflow:hidden; border:1px solid #c8d4cd; border-radius:14px; background:#fafcf9; box-shadow:0 12px 24px rgb(42 70 59 / 0.09); color:#24302a; transition:transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; } .ds-commander-card:hover { border-color:#739987; box-shadow:0 16px 30px rgb(42 70 59 / 0.15); transform:translateY(-3px); } .ds-card-art { aspect-ratio:0.716; background:linear-gradient(135deg, #dcebe2, #719680); } .ds-card-content { display:grid; gap:7px; padding:12px; font:0.8rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; } .ds-card-content strong { font-size:0.91rem; }"
+    },
+    {
+      "name": "Language Selector",
+      "kind": "nav",
+      "refersTo": "button-secondary",
+      "description": "A compact language menu trigger with a clear selected-language label.",
+      "html": "<button class=\"ds-language-button\" type=\"button\"><span class=\"ds-flag\" aria-hidden=\"true\"></span><span>English</span><span aria-hidden=\"true\">⌄</span></button>",
+      "css": ".ds-language-button { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 10px; border:1px solid #c5d3cb; border-radius:9px; outline:0; color:#315e4e; background:#fbfcfa; font:750 0.8rem 'Segoe UI Variable', Aptos, system-ui, sans-serif; cursor:pointer; } .ds-flag { width:20px; height:14px; border:1px solid rgb(26 46 37 / 0.16); border-radius:2px; background:linear-gradient(#0d2862 0 33%, #fff 33% 66%, #cf3a48 66%); box-shadow:0 1px 2px rgb(34 58 47 / 0.12); } .ds-language-button:hover { background:#e5efe9; } .ds-language-button:focus-visible { outline:3px solid rgb(45 120 97 / 0.45); outline-offset:3px; }"
+    },
+    {
+      "name": "Empty Draw State",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "The calm invitation shown before the first Commander Roulette draw.",
+      "html": "<section class=\"ds-empty-state\"><h2>Your commander challenge starts here.</h2><p>Choose the players, draw commanders, then build around one pick each.</p></section>",
+      "css": ".ds-empty-state { min-height:260px; padding:56px; border:1px solid #d6dfd9; border-radius:16px; background:#f7faf7; box-shadow:0 16px 40px rgb(44 72 60 / 0.07); } .ds-empty-state h2 { max-width:430px; margin:0 0 12px; color:#202c27; font:700 clamp(2rem, 4.2vw, 3.3rem)/0.98 'Segoe UI Variable', Aptos, system-ui, sans-serif; letter-spacing:-0.04em; } .ds-empty-state p { max-width:370px; margin:0; color:#66766f; font:1rem/1.55 'Segoe UI Variable', Aptos, system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Creative Deckbuilding Collector’s Workshop",
+    "overview": "Commander Roulette feels like a well-kept play table where a group can begin a deckbuilding challenge without ceremony. Forest green, pale paper surfaces, and the card art provide the atmosphere; the interface stays quiet enough for player names, choices, and commanders to do the work. The system is intentionally sober and efficient. Its personality comes from measured craft: a custom emblem, soft paper-like surfaces, practical card treatment, and restrained movement that confirms an action.",
+    "keyCharacteristics": ["Calm forest-and-parchment utility, with card artwork as the main visual content.", "A full-width pod roster that carries setup directly into a broad commander-results field.", "Softly lifted working surfaces, never decorative glass or heavy chrome.", "A recognizable framed logo that anchors the header without becoming a hero element.", "Friendly, direct copy with a small amount of game-table warmth."],
+    "rules": [
+      { "name": "The Card-Art Rule", "body": "Color supports the draw flow; it never recolors, frames aggressively, or competes with the commander image.", "section": "colors" },
+      { "name": "The Plain-Language Rule", "body": "Every control names the result it produces. Interface copy is direct, friendly, and avoids collectible-game jargon unless the player needs that exact term.", "section": "typography" },
+      { "name": "The Quiet Elevation Rule", "body": "Shadows explain layers or interaction; they never become decoration, halos, or a substitute for structure.", "section": "elevation" }
+    ],
+    "dos": ["Do keep the draw action visually unmistakable with Workshop Forest and full-width placement in the roster action zone.", "Do establish the whole pod in a full-width roster before revealing individual commander lanes.", "Do let the framed Commander Roulette mark lead the header while keeping the Draw commanders action as the page’s strongest commitment.", "Do let commander images carry the visual variety; use the UI palette only to organize them.", "Do keep actions compact, explicit, and comfortably keyboard-focusable.", "Do give every pointer control a 44px minimum target, including language, reroll, removal, and card-count controls.", "Do preserve the light and dark systems as green-tinted workspaces, not generic white and black themes.", "Do use the existing short, eased transitions and honor `prefers-reduced-motion`."],
+    "donts": ["Don't introduce gradients, oversized hero treatments, dashboard metrics, or decorative illustration into the core draw flow.", "Don't use bright mana colors as general UI accents; mana symbols belong to the card information itself.", "Don't add heavy borders, glass effects, or hard-offset shadows around cards and panels.", "Don't make a secondary action visually compete with the Draw commanders button.", "Don't turn the logo into a hero graphic, add a heavy shadow, or animate it continually.", "Don't crowd small screens with header copy or force card names into unreadably dense layouts.", "Don't bring back a sticky settings sidebar that separates the player roster from the shared draw."]
+  }
+}
