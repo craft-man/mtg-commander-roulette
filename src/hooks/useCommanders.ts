@@ -51,6 +51,7 @@ export function useCommanders() {
   const [error, setError] = useState<string | null>(null);
 
   const getCommanders = useCallback(async (language: CardLanguage = "en"): Promise<Commander[]> => {
+    setError(null);
     const memoryCache = cacheRef.current.get(language);
     if (memoryCache && Date.now() - memoryCache.fetchedAt < CACHE_DURATION_MS) {
       return memoryCache.commanders;

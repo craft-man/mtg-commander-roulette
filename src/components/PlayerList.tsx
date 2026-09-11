@@ -34,13 +34,14 @@ export function PlayerList({
 }: PlayerListProps) {
   return (
     <section className="player-panel" aria-label="Player setup">
-      <span className="player-panel-mark" aria-hidden="true">
-        <img src={brandLogo} alt="" />
-      </span>
-      <h2 className="player-panel-title">Magic: The Gathering Commander Roulette</h2>
+      <div className="setup-heading">
+        <div><p className="section-label">01 / The table</p><h1 className="player-panel-title">Who's playing?</h1></div>
+        <p className="table-count">{players.length} {players.length === 1 ? "player" : "players"} seated</p>
+      </div>
       <div className="pod-setup-grid">
         <div className="pod-player-zone">
           <div className="player-list">
+            {players.length === 0 ? <p className="roster-empty">An open seat for every friend.<br />Add your players to get started.</p> : null}
             {players.map((player) => (
               <PlayerInput
                 key={player.id}

@@ -27,13 +27,14 @@ export function DrawResults({
     return (
       <section className="results-empty" aria-live="polite">
         <div className="results-empty-content">
-          <h2>Your commander challenge starts here.</h2>
+          <p className="section-label">02 / The draw</p>
+          <h2>Leave the commander<br /><em>to chance.</em></h2>
           <p>
-            Can’t decide which commander to play? Choose the players, draw as many commanders as
-            you like for each, then everyone builds a deck around one of their picks. Once the decks
-            are ready, it’s time to battle.
+            A few unexpected picks. A deck you wouldn’t usually build.
+            Draw commanders for your table, choose your favourite, and meet back here for a game.
           </p>
         </div>
+        <div className="draw-note"><span aria-hidden="true">↳</span><p>One choice each.<br />No duplicate commanders.<br />The rest is up to you.</p></div>
       </section>
     );
   }
@@ -47,7 +48,8 @@ export function DrawResults({
       ) : null}
       <div className="results-heading">
         <div>
-          <h2 id="results-title">Commander assignments</h2>
+          <p className="section-label">02 / The draw</p>
+          <h2 id="results-title">Your commanders</h2>
           <p className="results-summary">
             Each player chooses one of their drawn commanders, then builds a deck around it.
           </p>

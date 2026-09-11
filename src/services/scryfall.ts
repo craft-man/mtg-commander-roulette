@@ -51,7 +51,7 @@ export async function fetchCommanders(
     }
     visitedPages.add(pageUrl);
 
-    const response = await fetch(pageUrl, { signal });
+    const response = await fetchPage(pageUrl, signal);
     if (!response.ok) {
       throw new Error("Unable to retrieve commanders from Scryfall.");
     }
@@ -74,6 +74,23 @@ export async function fetchCommanders(
   }
 
   return commanders;
+}
+
+
+// Retry the current page only, so a brief connection failure does not discard progress.
+async function fetchPage(url: string, signal?: AbortSignal): Promise<Response> {
+  for (let attempt = 0; ; attempt += 1) {
+    signal?.throwIfAborted();
+    try {
+      return await fetch(url, { signal });
+    } catch (cause) {
+      if (signal?.aborted || (cause instanceof Error && cause.name === "AbortError")) throw cause;
+      if (attempt === 2) {
+        throw new Error("Could not connect to Scryfall. Check your connection and try again. Your current draw has been kept.");
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+  }
 }
 
 export function mapScryfallCard(card: ScryfallCard): Commander | null {

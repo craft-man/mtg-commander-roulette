@@ -241,6 +241,7 @@ export default function App() {
       <>
         <main className="app-shell shared-app-shell" inert={isBlockingLoad}>
           <header className="app-header">
+            <Brand />
             <div className="header-tools">
               <p>Shared draw - read only.</p>
               <LanguageSelect language={language} disabled />
@@ -266,6 +267,7 @@ export default function App() {
     <>
       <main className="app-shell" inert={isBlockingLoad}>
         <header className="app-header">
+          <Brand />
           <div className="header-tools">
             <LanguageSelect
               language={language}
@@ -331,6 +333,15 @@ function SiteFooter() {
         not produced by or endorsed by Wizards of the Coast.
       </p>
     </footer>
+  );
+}
+
+function Brand() {
+  return (
+    <a className="brand" href={window.location.pathname} aria-label="Commander Roulette — new table">
+      <img src={brandLogo} alt="" />
+      <span><span className="brand-caption">Magic: The Gathering</span><span className="brand-name">Commander Roulette</span></span>
+    </a>
   );
 }
 
