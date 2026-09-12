@@ -329,8 +329,8 @@ function SiteFooter() {
         Commander Roulette is not affiliated with Magic: The Gathering or Wizards of the Coast. It
         is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. The
         literal and graphical information presented on this site about Magic: The Gathering,
-        including card images and mana symbols, is copyright Wizards of the Coast, LLC. Scryfall is
-        not produced by or endorsed by Wizards of the Coast.
+        including mana symbols, is copyright Wizards of the Coast, LLC. Card images are provided by
+        Scryfall.
       </p>
     </footer>
   );
