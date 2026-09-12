@@ -370,6 +370,11 @@ h3 {
   border-left: 1px solid #bac2b6;
 }
 
+.draw-settings {
+  display: grid;
+  gap: 10px;
+}
+
 .player-row-pending {
   grid-template-columns: 1fr auto 44px;
 }
@@ -471,6 +476,66 @@ h3 {
   font-weight: 700;
 }
 
+.draw-count-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draw-count-field label .setting-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.commander-setting-icon {
+  color: var(--copper-text);
+}
+
+.joker-card-paper {
+  fill: #f7f3f0;
+}
+
+.joker-card-shadow {
+  fill: #d8cfca;
+}
+
+.joker-card-outline {
+  fill: none;
+  stroke: #75655e;
+  stroke-width: 1;
+}
+
+.joker-corner-star,
+.joker-hat-red,
+.joker-pom-red {
+  fill: #db1730;
+}
+
+.joker-collar {
+  fill: #7252c7;
+}
+
+.joker-hat-teal,
+.joker-pom-teal {
+  fill: #0aadd2;
+}
+
+.joker-hat-gold,
+.joker-pom-gold {
+  fill: #ffad0a;
+}
+
+.joker-face-fill {
+  fill: #fffdf9;
+}
+
+.joker-face-detail {
+  fill: none;
+  stroke: #53352f;
+  stroke-width: 1.05;
+}
+
 .draw-count-field input {
   width: 62px;
   height: 44px;
@@ -529,6 +594,114 @@ h3 {
   font-size: 0.86rem;
   font-weight: 650;
   line-height: 1.45;
+}
+
+.new-game-dialog {
+  width: min(calc(100% - 32px), 520px);
+  max-width: none;
+  padding: 0;
+  border: 1px solid #9ca99f;
+  border-radius: 6px;
+  color: #26342c;
+  background: #f7f3e8;
+  box-shadow: 0 26px 70px rgb(13 22 17 / 0.38);
+  animation: dialog-arrive 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.new-game-dialog::backdrop {
+  background: rgb(8 17 12 / 0.72);
+  backdrop-filter: blur(7px);
+}
+
+.new-game-dialog-content {
+  position: relative;
+  display: grid;
+  padding: 38px;
+}
+
+.dialog-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 24px;
+  border: 1px solid #c78251;
+  border-radius: 4px;
+  color: #6f3d20;
+  background: #efd0b3;
+}
+
+.new-game-dialog h2 {
+  margin: 0 48px 12px 0;
+  color: #26342c;
+  font-family: Georgia, serif;
+  font-size: clamp(1.8rem, 5vw, 2.35rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.new-game-dialog p {
+  max-width: 47ch;
+  margin: 0;
+  color: #536359;
+  line-height: 1.65;
+}
+
+.dialog-close-button {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 4px;
+  color: #65746b;
+  background: transparent;
+}
+
+.dialog-close-button:hover {
+  color: #8b3e30;
+  background: #eee5d9;
+}
+
+.new-game-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #d5d8cf;
+}
+
+.dialog-confirm-button {
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid #b36f42;
+  border-radius: 4px;
+  color: #24180f;
+  background: var(--copper);
+  font-size: 0.87rem;
+  font-weight: 750;
+}
+
+.dialog-confirm-button:hover {
+  background: var(--copper-hover);
+}
+
+.dialog-close-button:focus-visible,
+.dialog-confirm-button:focus-visible {
+  outline: 3px solid #719c83;
+  outline-offset: 3px;
+}
+
+@keyframes dialog-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
 }
 
 .results-empty {
@@ -618,13 +791,52 @@ h3 {
 }
 
 .draw-player-heading {
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
+.player-reroll-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
 .draw-player-heading h3 {
+  flex: 1 1 180px;
   margin-bottom: 0;
   font-size: 1.18rem;
   letter-spacing: -0.025em;
+}
+
+.joker-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid #bdcbbf;
+  border-radius: 3px;
+  color: #486556;
+  background: #f4f2e9;
+  font-size: 0.7rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.025em;
+}
+
+.joker-count-icon {
+  flex: 0 0 auto;
+}
+
+.joker-count.is-empty {
+  border-color: #d2c3b5;
+  color: #79685b;
+  background: #eee8de;
+}
+
+.joker-count.is-empty .joker-count-icon {
+  filter: saturate(0.25);
+  opacity: 0.72;
 }
 
 .text-button {
@@ -652,12 +864,70 @@ h3 {
 }
 
 .commander-card {
+  position: relative;
   overflow: hidden;
   border: 0;
   border-radius: 4px;
   background: transparent;
   box-shadow: none;
   transition: transform 180ms ease;
+}
+
+.card-lock-button {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgb(63 73 67 / 0.45);
+  border-radius: 3px;
+  color: #20342a;
+  background: #f8f3e7;
+  box-shadow: 0 5px 16px rgb(25 32 27 / 0.24);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.card-lock-button:hover:not(:disabled) {
+  color: #5f351d;
+  background: #f1d0ae;
+}
+
+.card-lock-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.commander-card.is-locked .card-lock-button {
+  border-color: #9f6338;
+  color: #3f2414;
+  background: #d79b6c;
+}
+
+.card-flip::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 3px;
+  pointer-events: none;
+  content: "";
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.commander-card.is-locked .card-flip::after {
+  background: rgb(215 155 108 / 0.12);
+  box-shadow: inset 0 0 0 3px #d79b6c, inset 0 0 28px rgb(215 155 108 / 0.34);
+}
+
+.commander-card.is-locked .commander-name {
+  color: #814a27;
 }
 
 .commander-card:hover,
@@ -673,6 +943,7 @@ h3 {
 
 .commander-card:focus-visible,
 .commander-card-link:focus-visible,
+.card-lock-button:focus-visible,
 .draw-button:focus-visible,
 .add-player-button:focus-visible,
 .icon-button:focus-visible,
@@ -882,6 +1153,18 @@ h3 {
 
   .player-panel { padding: 0 0 24px; }
 
+  .new-game-dialog-content {
+    padding: 30px 24px 24px;
+  }
+
+  .new-game-dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .new-game-dialog-actions button {
+    width: 100%;
+  }
+
 
 
   .pod-draw-controls {
@@ -1032,6 +1315,18 @@ h3 {
     background: #16231d;
   }
 
+  .joker-count {
+    border-color: #455e50;
+    color: #b9d4c3;
+    background: #1d2c24;
+  }
+
+  .joker-count.is-empty {
+    border-color: #5a4d42;
+    color: #c8b7a7;
+    background: #2c251f;
+  }
+
   .player-name-input::placeholder {
     color: #8c9e94;
   }
@@ -1091,6 +1386,39 @@ h3 {
     color: #9bc8ad;
   }
 
+  .new-game-dialog {
+    border-color: #5b6b61;
+    color: #e8eee9;
+    background: #19251f;
+  }
+
+  .new-game-dialog h2 {
+    color: #f2eee3;
+  }
+
+  .new-game-dialog p {
+    color: #b7c8bd;
+  }
+
+  .dialog-symbol {
+    border-color: #b97d52;
+    color: #f6d4b9;
+    background: #4b3020;
+  }
+
+  .dialog-close-button {
+    color: #b8c5bd;
+  }
+
+  .dialog-close-button:hover {
+    color: #f3b3a7;
+    background: #3a2924;
+  }
+
+  .new-game-dialog-actions {
+    border-color: #3c4e44;
+  }
+
   .language-select-trigger,
   .language-select-menu {
     border-color: #465d52;
@@ -1114,6 +1442,27 @@ h3 {
   .commander-card-topline svg,
   .mana-symbols {
     color: #9ac1aa;
+  }
+
+  .card-lock-button {
+    border-color: #64746a;
+    color: #e8eee9;
+    background: #26352d;
+  }
+
+  .card-lock-button:hover:not(:disabled) {
+    color: #fff1e2;
+    background: #704529;
+  }
+
+  .commander-card.is-locked .card-lock-button {
+    border-color: #e0aa7f;
+    color: #27180e;
+    background: #dda071;
+  }
+
+  .commander-card.is-locked .commander-name {
+    color: #efb486;
   }
 
   .transform-button {
@@ -1226,6 +1575,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #719c83; outline-offs
   .draw-button,
   .commander-card,
   .card-flip,
+  .card-flip::after,
+  .card-lock-button,
+  .new-game-dialog,
+  .dialog-close-button,
+  .dialog-confirm-button,
   .transform-button,
   .commander-resource-link {
     transition: none;

@@ -39,13 +39,14 @@ export function drawForPlayers(
   }));
 }
 
-export function rerollPlayer(
+export function rerollPlayers(
   draws: PlayerDraw[],
-  playerId: string,
+  playerIds: ReadonlySet<string>,
   pool: Commander[],
+  lockedCommanderOracleIds: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
 ): PlayerDraw[] {
-  const target = draws.find((draw) => draw.player.id === playerId);
-  if (!target) {
+  const targets = draws.filter((draw) => playerIds.has(draw.player.id));
+  if (targets.length === 0) {
     return draws;
   }
 
@@ -53,15 +54,41 @@ export function rerollPlayer(
     draws.flatMap((draw) => draw.commanders.map((commander) => commander.id)),
   );
   const available = pool.filter((commander) => !assignedIds.has(commander.id));
-  const commandersPerPlayer = target.commanders.length;
+  const replacementCount = targets.reduce((count, draw) => {
+    const lockedIds = lockedCommanderOracleIds.get(draw.player.id) ?? new Set<string>();
+    return count + draw.commanders.filter((commander) => !lockedIds.has(commander.oracleId)).length;
+  }, 0);
 
-  if (available.length < commandersPerPlayer) {
+  if (available.length < replacementCount) {
     throw new Error("Not enough commanders available for this draw.");
   }
 
-  const replacements = drawCommandersFromPool(available, commandersPerPlayer);
-  return draws.map((draw) =>
-    draw.player.id === playerId ? { ...draw, commanders: replacements } : draw,
+  return draws.map((draw) => {
+    if (!playerIds.has(draw.player.id)) return draw;
+
+    const lockedIds = lockedCommanderOracleIds.get(draw.player.id) ?? new Set<string>();
+    return {
+      ...draw,
+      commanders: draw.commanders.map((commander) =>
+        lockedIds.has(commander.oracleId)
+          ? commander
+          : drawCommandersFromPool(available, 1)[0],
+      ),
+    };
+  });
+}
+
+export function rerollPlayer(
+  draws: PlayerDraw[],
+  playerId: string,
+  pool: Commander[],
+  lockedCommanderOracleIds: ReadonlySet<string> = new Set(),
+): PlayerDraw[] {
+  return rerollPlayers(
+    draws,
+    new Set([playerId]),
+    pool,
+    new Map([[playerId, lockedCommanderOracleIds]]),
   );
 }
 

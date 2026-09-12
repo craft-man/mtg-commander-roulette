@@ -1,6 +1,8 @@
 import { ArrowsClockwise, Copy } from "@phosphor-icons/react";
+import type { PlayerGameStates } from "../models/PlayerGameState";
 import type { PlayerDraw } from "../models/PlayerDraw";
 import { CommanderCard } from "./CommanderCard";
+import { JokerCardIcon } from "./JokerCardIcon";
 
 interface DrawResultsProps {
   draws: PlayerDraw[];
@@ -10,6 +12,8 @@ interface DrawResultsProps {
   onShare?: () => void;
   shareStatus?: string | null;
   announcement?: { id: number; message: string } | null;
+  playerGameStates?: PlayerGameStates;
+  onToggleLock?: (playerId: string, commanderOracleId: string) => void;
   readOnly?: boolean;
 }
 
@@ -21,6 +25,8 @@ export function DrawResults({
   onShare,
   shareStatus,
   announcement,
+  playerGameStates = {},
+  onToggleLock,
   readOnly = false,
 }: DrawResultsProps) {
   if (draws.length === 0) {
@@ -38,6 +44,13 @@ export function DrawResults({
       </section>
     );
   }
+
+  const canRerollAny = draws.some((draw) => {
+    const state = playerGameStates[draw.player.id];
+    if (!state || state.jokersRemaining < 1) return false;
+    const lockedIds = new Set(state.lockedCommanderOracleIds);
+    return draw.commanders.some((commander) => !lockedIds.has(commander.oracleId));
+  });
 
   return (
     <section className="results-section" aria-labelledby="results-title">
@@ -64,7 +77,7 @@ export function DrawResults({
               className="secondary-button"
               type="button"
               onClick={onRerollAll}
-              disabled={isRerolling}
+              disabled={isRerolling || !canRerollAny}
             >
               <ArrowsClockwise size={19} weight="bold" />
               Reroll all
@@ -79,29 +92,65 @@ export function DrawResults({
       </div>
 
       <div className="draw-list">
-        {draws.map((draw) => (
-          <article className="player-draw" key={draw.player.id}>
+        {draws.map((draw) => {
+          const gameState = playerGameStates[draw.player.id];
+          const lockedIds = new Set(gameState?.lockedCommanderOracleIds ?? []);
+          const allCommandersLocked = draw.commanders.every((commander) =>
+            lockedIds.has(commander.oracleId),
+          );
+          const canRerollPlayer = Boolean(
+            gameState && gameState.jokersRemaining > 0 && !allCommandersLocked,
+          );
+
+          return <article className="player-draw" key={draw.player.id}>
             <div className="draw-player-heading">
               <h3>{draw.player.name || "Unnamed player"}</h3>
               {!readOnly ? (
-                <button
-                  className="text-button"
-                  type="button"
-                  onClick={() => onRerollPlayer?.(draw.player.id)}
-                  disabled={isRerolling}
-                >
-                  <ArrowsClockwise size={16} weight="bold" />
-                  Reroll
-                </button>
+                <div className="player-reroll-controls">
+                  {gameState ? (
+                  <span
+                    className={`joker-count${gameState.jokersRemaining === 0 ? " is-empty" : ""}`}
+                  >
+                    <JokerCardIcon className="joker-count-icon" size={20} />
+                    {gameState.jokersRemaining} {gameState.jokersRemaining === 1 ? "joker" : "jokers"} left
+                  </span>
+                  ) : null}
+                  <button
+                    className="text-button"
+                    type="button"
+                    onClick={() => onRerollPlayer?.(draw.player.id)}
+                    disabled={isRerolling || !canRerollPlayer}
+                    title={
+                      gameState?.jokersRemaining === 0
+                        ? "No jokers remaining"
+                        : allCommandersLocked
+                          ? "Release a commander before rerolling"
+                          : "Spend one joker to reroll unfixed commanders"
+                    }
+                  >
+                    <ArrowsClockwise size={16} weight="bold" />
+                    Reroll
+                  </button>
+                </div>
               ) : null}
             </div>
             <div className="commander-grid">
               {draw.commanders.map((commander) => (
-                <CommanderCard key={commander.id} commander={commander} />
+                <CommanderCard
+                  key={commander.id}
+                  commander={commander}
+                  isLocked={lockedIds.has(commander.oracleId)}
+                  onToggleLock={
+                    readOnly || !onToggleLock
+                      ? undefined
+                      : () => onToggleLock(draw.player.id, commander.oracleId)
+                  }
+                  lockDisabled={isRerolling}
+                />
               ))}
             </div>
-          </article>
-        ))}
+          </article>;
+        })}
       </div>
     </section>
   );

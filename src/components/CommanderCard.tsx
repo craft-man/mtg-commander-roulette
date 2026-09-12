@@ -1,18 +1,48 @@
-import { ArrowsClockwise, ArrowSquareOut, ChartLineUp } from "@phosphor-icons/react";
+import {
+  ArrowsClockwise,
+  ArrowSquareOut,
+  ChartLineUp,
+  LockKey,
+  LockKeyOpen,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import type { Commander } from "../models/Commander";
 import { ManaSymbols } from "./ManaSymbols";
 
 interface CommanderCardProps {
   commander: Commander;
+  isLocked?: boolean;
+  onToggleLock?: () => void;
+  lockDisabled?: boolean;
 }
 
-export function CommanderCard({ commander }: CommanderCardProps) {
+export function CommanderCard({
+  commander,
+  isLocked = false,
+  onToggleLock,
+  lockDisabled = false,
+}: CommanderCardProps) {
   const [isTransformed, setIsTransformed] = useState(false);
   const canTransform = Boolean(commander.backImageUrl);
 
   return (
-    <article className={`commander-card${isTransformed ? " is-transformed" : ""}`}>
+    <article
+      className={`commander-card${isTransformed ? " is-transformed" : ""}${isLocked ? " is-locked" : ""}`}
+    >
+      {onToggleLock ? (
+        <button
+          className="card-lock-button"
+          type="button"
+          onClick={onToggleLock}
+          disabled={lockDisabled}
+          aria-pressed={isLocked}
+          aria-label={`${isLocked ? "Release" : "Fix"} ${commander.name}`}
+          title={isLocked ? "Release this commander" : "Fix this commander"}
+        >
+          {isLocked ? <LockKey size={16} weight="fill" /> : <LockKeyOpen size={16} weight="bold" />}
+          {isLocked ? <span>Fixed</span> : null}
+        </button>
+      ) : null}
       <a
         className="commander-card-link"
         href={commander.scryfallUrl}

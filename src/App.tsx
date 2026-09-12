@@ -2,12 +2,21 @@ import { CaretDown } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import brandLogo from "./assets/commander-roulette-logo.png";
 import { DrawResults } from "./components/DrawResults";
+import { NewGameDialog } from "./components/NewGameDialog";
 import { PlayerList } from "./components/PlayerList";
 import { useCommanders } from "./hooks/useCommanders";
+import type { PlayerGameStates } from "./models/PlayerGameState";
 import type { Player } from "./models/Player";
 import type { PlayerDraw } from "./models/PlayerDraw";
 import { CARD_LANGUAGES, type CardLanguage } from "./services/scryfall";
-import { drawForPlayers, rerollPlayer } from "./utils/draw";
+import { drawForPlayers, rerollPlayers } from "./utils/draw";
+import {
+  createPlayerGameState,
+  createPlayerGameStates,
+  getRerollEligiblePlayerIds,
+  lockedCommanderMap,
+  spendJokers,
+} from "./utils/game";
 import { createShareUrl, hydrateSharedDraw, readSharedDraw } from "./utils/share";
 
 function createPlayerId(): string {
@@ -25,14 +34,17 @@ export default function App() {
   const [sharedDraw] = useState(() => readSharedDraw(window.location.hash));
   const [players, setPlayers] = useState<Player[]>([]);
   const [cardsPerPlayer, setCardsPerPlayer] = useState(3);
+  const [jokersPerPlayer, setJokersPerPlayer] = useState(2);
   const [language, setLanguage] = useState<CardLanguage>(sharedDraw?.language ?? "en");
   const [draws, setDraws] = useState<PlayerDraw[]>([]);
+  const [playerGameStates, setPlayerGameStates] = useState<PlayerGameStates>({});
   const [actionError, setActionError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [resultAnnouncement, setResultAnnouncement] = useState<{
     id: number;
     message: string;
   } | null>(null);
+  const [isNewGameDialogOpen, setIsNewGameDialogOpen] = useState(false);
   const [isRerolling, setIsRerolling] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const [isSharedLoading, setIsSharedLoading] = useState(Boolean(sharedDraw));
@@ -85,10 +97,19 @@ export default function App() {
   const removePlayer = (id: string) => {
     setPlayers((current) => current.filter((player) => player.id !== id));
     setDraws((current) => current.filter((draw) => draw.player.id !== id));
+    setPlayerGameStates((current) => {
+      const remaining = { ...current };
+      delete remaining[id];
+      return remaining;
+    });
   };
 
   const updateCardsPerPlayer = (count: number) => {
     setCardsPerPlayer(Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 1);
+  };
+
+  const updateJokersPerPlayer = (count: number) => {
+    setJokersPerPlayer(Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0);
   };
 
   const drawAddedPlayer = async (playerId: string) => {
@@ -121,6 +142,10 @@ export default function App() {
             players.findIndex((currentPlayer) => currentPlayer.id === second.player.id),
         );
       });
+      setPlayerGameStates((current) => ({
+        ...current,
+        [playerId]: createPlayerGameState(jokersPerPlayer),
+      }));
       announceResult(`${preparedPlayer.name}'s commander options are ready.`);
     } catch (cause) {
       if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
@@ -142,6 +167,7 @@ export default function App() {
       const preparedPlayers = normalisePlayers(players);
       setPlayers(preparedPlayers);
       setDraws(drawForPlayers(preparedPlayers, pool, cardsPerPlayer));
+      setPlayerGameStates(createPlayerGameStates(preparedPlayers, jokersPerPlayer));
       announceResult(
         `${preparedPlayers.length} player${preparedPlayers.length === 1 ? "" : "s"} have commander assignments ready.`,
       );
@@ -155,14 +181,37 @@ export default function App() {
   };
 
   const rerollAll = async () => {
+    const eligiblePlayerIds = new Set(getRerollEligiblePlayerIds(draws, playerGameStates));
+    const eligibleDraws = draws.filter((draw) => eligiblePlayerIds.has(draw.player.id));
+    if (eligiblePlayerIds.size === 0) {
+      announceResult("No player can reroll: release a commander or start a new game for more jokers.");
+      return;
+    }
+
     setActionError(null);
     setIsRerolling(true);
     try {
       const pool = await getCommanders(language);
-      const preparedPlayers = normalisePlayers(players);
-      setPlayers(preparedPlayers);
-      setDraws(drawForPlayers(preparedPlayers, pool, cardsPerPlayer));
-      announceResult("All commander assignments have been redrawn.");
+      const nextDraws = rerollPlayers(
+        draws,
+        eligiblePlayerIds,
+        pool,
+        lockedCommanderMap(playerGameStates),
+      );
+      setDraws(nextDraws);
+      setPlayerGameStates((current) => spendJokers(current, eligiblePlayerIds));
+      const remainingSummary = eligibleDraws
+        .map((draw) => {
+          const remaining = playerGameStates[draw.player.id].jokersRemaining - 1;
+          return `${draw.player.name}: ${remaining} ${remaining === 1 ? "joker" : "jokers"} left`;
+        })
+        .join("; ");
+      const skippedCount = draws.length - eligibleDraws.length;
+      announceResult(
+        `${eligibleDraws.length} ${eligibleDraws.length === 1 ? "player" : "players"} redrawn. ${remainingSummary}.${
+          skippedCount > 0 ? ` ${skippedCount} ${skippedCount === 1 ? "player was" : "players were"} skipped.` : ""
+        }`,
+      );
     } catch (cause) {
       if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
         setActionError(cause.message);
@@ -173,13 +222,40 @@ export default function App() {
   };
 
   const rerollOne = async (playerId: string) => {
+    const draw = draws.find((currentDraw) => currentDraw.player.id === playerId);
+    const gameState = playerGameStates[playerId];
+    const lockedIds = new Set(gameState?.lockedCommanderOracleIds ?? []);
+    if (
+      !draw ||
+      !gameState ||
+      gameState.jokersRemaining < 1 ||
+      draw.commanders.every((commander) => lockedIds.has(commander.oracleId))
+    ) {
+      return;
+    }
+
     setActionError(null);
     setIsRerolling(true);
     try {
       const pool = await getCommanders(language);
       const player = players.find((currentPlayer) => currentPlayer.id === playerId);
-      setDraws((current) => rerollPlayer(current, playerId, pool));
-      announceResult(`${player?.name || "Player"}'s commander options have been redrawn.`);
+      const nextDraws = rerollPlayers(
+        draws,
+        new Set([playerId]),
+        pool,
+        new Map([[playerId, lockedIds]]),
+      );
+      const jokersRemaining = gameState.jokersRemaining - 1;
+      setDraws(nextDraws);
+      setPlayerGameStates((current) => ({
+        ...current,
+        [playerId]: { ...current[playerId], jokersRemaining },
+      }));
+      announceResult(
+        `${player?.name || "Player"}'s unfixed commanders have been redrawn. ${jokersRemaining} ${
+          jokersRemaining === 1 ? "joker" : "jokers"
+        } left.`,
+      );
     } catch (cause) {
       if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
         setActionError(cause.message);
@@ -187,6 +263,35 @@ export default function App() {
     } finally {
       setIsRerolling(false);
     }
+  };
+
+  const toggleCommanderLock = (playerId: string, commanderOracleId: string) => {
+    const draw = draws.find((currentDraw) => currentDraw.player.id === playerId);
+    const commander = draw?.commanders.find((card) => card.oracleId === commanderOracleId);
+    if (!draw || !commander || !playerGameStates[playerId]) return;
+
+    const isLocked = playerGameStates[playerId].lockedCommanderOracleIds.includes(commanderOracleId);
+    setPlayerGameStates((current) => ({
+      ...current,
+      [playerId]: {
+        ...current[playerId],
+        lockedCommanderOracleIds: isLocked
+          ? current[playerId].lockedCommanderOracleIds.filter((id) => id !== commanderOracleId)
+          : [...current[playerId].lockedCommanderOracleIds, commanderOracleId],
+      },
+    }));
+    announceResult(
+      `${commander.name} ${isLocked ? "released" : "fixed"} for ${draw.player.name || "player"}.`,
+    );
+  };
+
+  const startNewGame = () => {
+    setDraws([]);
+    setPlayerGameStates({});
+    setActionError(null);
+    setShareStatus(null);
+    setResultAnnouncement(null);
+    setIsNewGameDialogOpen(false);
   };
 
   const shareDraw = async () => {
@@ -232,7 +337,12 @@ export default function App() {
   };
 
   const visibleError = error ?? actionError;
-  const drawLabel = isLoading || isRerolling ? "Drawing commanders..." : "Draw commanders";
+  const hasActiveGame = draws.length > 0;
+  const drawLabel = isLoading || isRerolling
+    ? "Drawing commanders..."
+    : hasActiveGame
+      ? "New game"
+      : "Draw commanders";
   const isBlockingLoad = isLoading && (draws.length === 0 || isChangingLanguage);
   const isActionInProgress = isLoading || isRerolling || isChangingLanguage;
 
@@ -282,16 +392,19 @@ export default function App() {
             <PlayerList
               players={players}
               cardsPerPlayer={cardsPerPlayer}
+              jokersPerPlayer={jokersPerPlayer}
               onAdd={addPlayer}
               onCardsPerPlayerChange={updateCardsPerPlayer}
+              onJokersPerPlayerChange={updateJokersPerPlayer}
               onChange={updatePlayer}
               onRemove={removePlayer}
               drawnPlayerIds={drawnPlayerIds}
               onDrawPlayer={drawAddedPlayer}
-              onDrawAll={drawAll}
+              onDrawAll={hasActiveGame ? () => setIsNewGameDialogOpen(true) : drawAll}
               drawLabel={drawLabel}
               isDrawDisabled={players.length === 0 || isActionInProgress}
               isBusy={isActionInProgress}
+              settingsLocked={hasActiveGame}
             />
             {visibleError ? (
               <p className="error-message pod-error" role="alert">
@@ -311,12 +424,19 @@ export default function App() {
                 onShare={shareDraw}
                 shareStatus={shareStatus}
                 announcement={resultAnnouncement}
+                playerGameStates={playerGameStates}
+                onToggleLock={toggleCommanderLock}
               />
             ) : null}
           </div>
         </div>
         <SiteFooter />
       </main>
+      <NewGameDialog
+        isOpen={isNewGameDialogOpen}
+        onCancel={() => setIsNewGameDialogOpen(false)}
+        onConfirm={startNewGame}
+      />
       {isBlockingLoad ? <InitialLoadOverlay isLanguageChange={isChangingLanguage} /> : null}
     </>
   );
