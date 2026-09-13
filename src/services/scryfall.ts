@@ -1,4 +1,4 @@
-import type { Commander } from "../models/Commander";
+import type { Commander, CommanderPairingLabel } from "../models/Commander";
 
 export const CARD_LANGUAGES = [
   { code: "en", label: "English" },
@@ -23,6 +23,8 @@ interface ScryfallCard {
   name: string;
   colors?: string[];
   color_identity?: string[];
+  keywords?: string[];
+  type_line?: string;
   image_uris?: ScryfallImageUris;
   card_faces?: Array<{ name: string; image_uris?: ScryfallImageUris }>;
   related_uris?: { edhrec?: string };
@@ -104,6 +106,8 @@ export function mapScryfallCard(card: ScryfallCard): Commander | null {
     return null;
   }
 
+  const pairingLabel = getPairingLabel(card);
+
   return {
     id: card.id,
     oracleId: card.oracle_id ?? card.id,
@@ -114,7 +118,30 @@ export function mapScryfallCard(card: ScryfallCard): Commander | null {
     ...(backImageUrl ? { backImageUrl } : {}),
     edhrecUrl: card.related_uris?.edhrec ?? `https://edhrec.com/commanders/${toSlug(card.name)}`,
     scryfallUrl: card.scryfall_uri,
+    ...(pairingLabel
+      ? {
+          pairing: {
+            url: `https://edhrec.com/partners/${toSlug(card.name)}`,
+            label: pairingLabel,
+          },
+        }
+      : {}),
   };
+}
+
+function getPairingLabel(card: ScryfallCard): CommanderPairingLabel | null {
+  const keywords = new Set(
+    (card.keywords ?? []).map((keyword) => keyword.trim().toLocaleLowerCase("en-US")),
+  );
+  const typeLine = card.type_line ?? "";
+
+  if (keywords.has("choose a background")) return "Backgrounds";
+  if (/\bBackground\b/i.test(typeLine)) return "Commanders";
+  if (keywords.has("doctor's companion")) return "Doctors";
+  if (/\bTime Lord Doctor\b/i.test(typeLine)) return "Companions";
+  if (keywords.has("partner") || keywords.has("partner with")) return "Partners";
+
+  return null;
 }
 
 function toSlug(name: string): string {

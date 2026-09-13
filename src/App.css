@@ -1060,6 +1060,10 @@ h3 {
   padding: 0 10px 10px;
 }
 
+.commander-resource-links.has-pairing {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .commander-resource-link {
   display: inline-flex;
   align-items: center;
@@ -1546,6 +1550,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #719c83; outline-offs
   .language-select-trigger { padding: 0 7px; gap: 5px; }
   .language-flag { width: 20px; }
   .table-count { max-width: 65px; text-align: right; }
+  .commander-resource-links.has-pairing { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-color-scheme: dark) {
   :root { background: #171f1b; --copper-text: #dda071; }

@@ -4,6 +4,7 @@ import {
   ChartLineUp,
   LockKey,
   LockKeyOpen,
+  Users,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { Commander } from "../models/Commander";
@@ -90,7 +91,9 @@ export function CommanderCard({
           Transform
         </button>
       ) : null}
-      <div className="commander-resource-links">
+      <div
+        className={`commander-resource-links${commander.pairing ? " has-pairing" : ""}`}
+      >
         <a
           className="commander-resource-link"
           href={commander.edhrecUrl}
@@ -101,6 +104,18 @@ export function CommanderCard({
           <ChartLineUp size={16} weight="bold" />
           EDHREC
         </a>
+        {commander.pairing ? (
+          <a
+            className="commander-resource-link"
+            href={commander.pairing.url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open compatible ${commander.pairing.label} for ${commander.name} on EDHREC`}
+          >
+            <Users size={16} weight="bold" />
+            {commander.pairing.label}
+          </a>
+        ) : null}
       </div>
     </article>
   );

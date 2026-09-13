@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Commander } from "../models/Commander";
 import { fetchCommanders, type CardLanguage } from "../services/scryfall";
 
-const CACHE_KEY = "commander-roulette:commanders:v4";
+const CACHE_KEY = "commander-roulette:commanders:v5";
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 interface CommanderCache {
