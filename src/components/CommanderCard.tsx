@@ -29,20 +29,41 @@ export function CommanderCard({
     <article
       className={`commander-card${isTransformed ? " is-transformed" : ""}${isLocked ? " is-locked" : ""}`}
     >
-      {onToggleLock ? (
-        <button
-          className="card-lock-button"
-          type="button"
-          onClick={onToggleLock}
-          disabled={lockDisabled}
-          aria-pressed={isLocked}
-          aria-label={`${isLocked ? "Release" : "Fix"} ${commander.name}`}
-          title={isLocked ? "Release this commander" : "Fix this commander"}
+      <div className="commander-card-media">
+        {onToggleLock ? (
+          <button
+            className="card-lock-button"
+            type="button"
+            onClick={onToggleLock}
+            disabled={lockDisabled}
+            aria-pressed={isLocked}
+            aria-label={`${isLocked ? "Release" : "Fix"} ${commander.name}`}
+            title={isLocked ? "Release this commander" : "Fix this commander"}
+          >
+            {isLocked ? <LockKey size={16} weight="fill" /> : <LockKeyOpen size={16} weight="bold" />}
+            {isLocked ? <span>Fixed</span> : null}
+          </button>
+        ) : null}
+        <a
+          className="commander-card-link"
+          href={commander.scryfallUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open artwork for ${commander.name} on Scryfall`}
         >
-          {isLocked ? <LockKey size={16} weight="fill" /> : <LockKeyOpen size={16} weight="bold" />}
-          {isLocked ? <span>Fixed</span> : null}
-        </button>
-      ) : null}
+          <span className="card-flip">
+            <img className="card-face" src={commander.imageUrl} alt={`Artwork for ${commander.name}`} />
+            {canTransform ? (
+              <img
+                className="card-face card-face-back"
+                src={commander.backImageUrl}
+                alt=""
+                aria-hidden="true"
+              />
+            ) : null}
+          </span>
+        </a>
+      </div>
       <a
         className="commander-card-link"
         href={commander.scryfallUrl}
@@ -50,17 +71,6 @@ export function CommanderCard({
         rel="noreferrer"
         aria-label={`Open ${commander.name} on Scryfall`}
       >
-        <span className="card-flip">
-          <img className="card-face" src={commander.imageUrl} alt={`Artwork for ${commander.name}`} />
-          {canTransform ? (
-            <img
-              className="card-face card-face-back"
-              src={commander.backImageUrl}
-              alt=""
-              aria-hidden="true"
-            />
-          ) : null}
-        </span>
         <span className="commander-card-content">
           <span className="commander-card-topline">
             <span className="commander-name">{commander.name}</span>
