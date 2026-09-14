@@ -5,9 +5,23 @@ export type CommanderPairingLabel =
   | "Doctors"
   | "Companions";
 
+export type CommanderPairingKind =
+  | "partner"
+  | "partner-with"
+  | "friends-forever"
+  | "choose-a-background"
+  | "background"
+  | "doctors-companion"
+  | "time-lord-doctor";
+
 export interface CommanderPairing {
   url: string;
   label: CommanderPairingLabel;
+  kind?: CommanderPairingKind;
+  partnerWith?: {
+    name: string;
+    oracleId?: string;
+  };
 }
 
 export interface Commander {

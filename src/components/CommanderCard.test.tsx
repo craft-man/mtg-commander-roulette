@@ -23,6 +23,7 @@ describe("CommanderCard pairing link", () => {
           pairing: {
             url: "https://edhrec.com/partners/donatello-the-brains",
             label: "Partners",
+            kind: "partner",
           },
         }}
       />,

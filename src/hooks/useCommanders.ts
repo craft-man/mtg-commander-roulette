@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import type { Commander } from "../models/Commander";
-import { fetchCommanders, type CardLanguage } from "../services/scryfall";
+import {
+  COMMANDER_LOAD_ERROR,
+  fetchCommanders,
+  type CardLanguage,
+} from "../services/commanderApi";
 
 const CACHE_KEY = "commander-roulette:commanders:v5";
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -74,7 +78,7 @@ export function useCommanders() {
       const message =
         cause instanceof Error
           ? cause.message
-          : "Unable to retrieve commanders from Scryfall.";
+          : COMMANDER_LOAD_ERROR;
       setError(message);
       throw new Error(message);
     } finally {

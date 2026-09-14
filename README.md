@@ -14,7 +14,7 @@
 
 [![Commander Roulette demo: add players, draw commanders, and reroll one player's choices](docs/media/commander-roulette-demo.gif)](https://mtg-commander-roulette-pi.vercel.app/)
 
-*A condensed walkthrough of the live site with Scryfall data preloaded in the browser cache. Actual commander choices are random; the first download may take a little while.*
+*A condensed walkthrough of the live site with commander data preloaded in the browser cache. Actual commander choices are random.*
 
 ## What is it?
 
@@ -43,9 +43,9 @@ Each player picks one of their drawn commanders, builds a deck around it, and me
 
 ## Card data and storage
 
-Card data and images come from [Scryfall](https://scryfall.com/). The app uses Scryfall's `is:commander` search in the selected language; it does not independently validate a completed deck or your group's house rules.
+Card data and images come from [Scryfall](https://scryfall.com/) through the dedicated Commander Roulette API. The API imports Scryfall Bulk Data on demand and prepares the supported card languages; the browser never paginates through Scryfall's search API. It does not independently validate a completed deck or your group's house rules.
 
-Commander data is cached in your browser for 24 hours per language. The first draw or a new language may need a longer download. Brief network failures are retried automatically; a first load still needs a working connection to Scryfall.
+Commander data is cached in your browser for 24 hours per language, while API responses are also cached by Vercel's CDN. Brief network failures are retried automatically.
 
 There is no account or server-side draw database. Save a share link if you want to revisit a result. Anyone with that link can read the included player names and selections.
 
@@ -67,7 +67,7 @@ npm test       # Run the test suite
 npm run build # Type-check and create the production build in dist/
 ```
 
-No API key or environment variables are required.
+Copy `.env.example` to `.env.local` and set `VITE_COMMANDER_API_URL` to the local or deployed Commander Roulette API URL.
 
 ## Deploy on Vercel
 
@@ -78,7 +78,7 @@ Import the repository into Vercel with these settings:
 | Framework preset | Vite |
 | Build command | `npm run build` |
 | Output directory | `dist` |
-| Environment variables | None required |
+| Environment variables | `VITE_COMMANDER_API_URL` |
 
 The current app uses `#share=…` links rather than server-side routes, so no custom routing configuration is needed.
 

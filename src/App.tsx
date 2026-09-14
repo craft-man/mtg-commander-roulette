@@ -8,7 +8,11 @@ import { useCommanders } from "./hooks/useCommanders";
 import type { PlayerGameStates } from "./models/PlayerGameState";
 import type { Player } from "./models/Player";
 import type { PlayerDraw } from "./models/PlayerDraw";
-import { CARD_LANGUAGES, type CardLanguage } from "./services/scryfall";
+import {
+  CARD_LANGUAGES,
+  COMMANDER_LOAD_ERROR,
+  type CardLanguage,
+} from "./services/commanderApi";
 import { drawForPlayers, rerollPlayers } from "./utils/draw";
 import {
   createPlayerGameState,
@@ -148,7 +152,7 @@ export default function App() {
       }));
       announceResult(`${preparedPlayer.name}'s commander options are ready.`);
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
+      if (cause instanceof Error && cause.message !== COMMANDER_LOAD_ERROR) {
         setActionError(cause.message);
       }
     } finally {
@@ -172,7 +176,7 @@ export default function App() {
         `${preparedPlayers.length} player${preparedPlayers.length === 1 ? "" : "s"} have commander assignments ready.`,
       );
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
+      if (cause instanceof Error && cause.message !== COMMANDER_LOAD_ERROR) {
         setActionError(cause.message);
       }
     } finally {
@@ -213,7 +217,7 @@ export default function App() {
         }`,
       );
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
+      if (cause instanceof Error && cause.message !== COMMANDER_LOAD_ERROR) {
         setActionError(cause.message);
       }
     } finally {
@@ -257,7 +261,7 @@ export default function App() {
         } left.`,
       );
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
+      if (cause instanceof Error && cause.message !== COMMANDER_LOAD_ERROR) {
         setActionError(cause.message);
       }
     } finally {
@@ -328,7 +332,7 @@ export default function App() {
       );
       setLanguage(nextLanguage);
     } catch (cause) {
-      if (cause instanceof Error && cause.message !== "Unable to retrieve commanders from Scryfall.") {
+      if (cause instanceof Error && cause.message !== COMMANDER_LOAD_ERROR) {
         setActionError(cause.message);
       }
     } finally {

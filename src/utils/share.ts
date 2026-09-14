@@ -1,6 +1,6 @@
 import type { Commander } from "../models/Commander";
 import type { PlayerDraw } from "../models/PlayerDraw";
-import type { CardLanguage } from "../services/scryfall";
+import type { CardLanguage } from "../services/commanderApi";
 
 const HASH_PREFIX = "#share=";
 const SHARE_VERSION = 3;

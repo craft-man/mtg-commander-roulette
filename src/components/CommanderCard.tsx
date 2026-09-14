@@ -25,6 +25,9 @@ export function CommanderCard({
 }: CommanderCardProps) {
   const [isTransformed, setIsTransformed] = useState(false);
   const canTransform = Boolean(commander.backImageUrl);
+  const pairingText = commander.pairing?.partnerWith
+    ? `Partner with ${commander.pairing.partnerWith.name}`
+    : commander.pairing?.label;
 
   return (
     <article
@@ -110,10 +113,10 @@ export function CommanderCard({
             href={commander.pairing.url}
             target="_blank"
             rel="noreferrer"
-            aria-label={`Open compatible ${commander.pairing.label} for ${commander.name} on EDHREC`}
+            aria-label={`Open compatible ${pairingText} for ${commander.name} on EDHREC`}
           >
             <Users size={16} weight="bold" />
-            {commander.pairing.label}
+            {pairingText}
           </a>
         ) : null}
       </div>
