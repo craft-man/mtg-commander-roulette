@@ -14,7 +14,7 @@ import {
   validateLanguage,
   withClient,
   withTransaction,
-} from "../_lib/core";
+} from "../_lib/core.js";
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (!requireMethod(request, response, ["GET", "PATCH"])) return;

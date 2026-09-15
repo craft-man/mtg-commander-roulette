@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleApiError, requireMethod, withClient } from "../_lib/core";
+import { handleApiError, requireMethod, withClient } from "../_lib/core.js";
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (!requireMethod(request, response, ["GET"])) return;

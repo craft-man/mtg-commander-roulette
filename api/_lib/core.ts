@@ -9,8 +9,8 @@ import type {
   GameSnapshot,
   OrganizerGameView,
   PublishGameInput,
-} from "../../src/models/CollaborativeGame";
-import type { CardLanguage } from "../../src/services/commanderApi";
+} from "../../src/models/CollaborativeGame.js";
+import type { CardLanguage } from "../../src/services/commanderApi.js";
 
 neonConfig.webSocketConstructor = ws;
 

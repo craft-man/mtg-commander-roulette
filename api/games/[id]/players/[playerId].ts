@@ -14,7 +14,7 @@ import {
   sendView,
   touchGame,
   withTransaction,
-} from "../../../_lib/core";
+} from "../../../_lib/core.js";
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (!requireMethod(request, response, ["PATCH", "DELETE"])) return;
