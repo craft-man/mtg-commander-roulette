@@ -67,6 +67,18 @@ export function CommanderCard({
             ) : null}
           </span>
         </a>
+        {canTransform ? (
+          <button
+            className="transform-button"
+            type="button"
+            onClick={() => setIsTransformed((current) => !current)}
+            aria-pressed={isTransformed}
+            aria-label={`Transform ${commander.name}`}
+            title="Transform commander"
+          >
+            <ArrowsClockwise size={18} weight="bold" />
+          </button>
+        ) : null}
       </div>
       <a
         className="commander-card-link"
@@ -83,17 +95,6 @@ export function CommanderCard({
           <ManaSymbols colors={commander.colorIdentity} />
         </span>
       </a>
-      {canTransform ? (
-        <button
-          className="transform-button"
-          type="button"
-          onClick={() => setIsTransformed((current) => !current)}
-          aria-pressed={isTransformed}
-        >
-          <ArrowsClockwise size={16} weight="bold" />
-          Transform
-        </button>
-      ) : null}
       <div
         className={`commander-resource-links${commander.pairing ? " has-pairing" : ""}`}
       >

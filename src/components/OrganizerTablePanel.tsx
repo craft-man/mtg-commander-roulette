@@ -1,5 +1,6 @@
-import { Plus, Trash } from "@phosphor-icons/react";
+import { Crown, Plus, Trash } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import brandLogo from "../assets/commander-roulette-logo.png";
 import type { GameSnapshot } from "../models/CollaborativeGame";
 import { JokerCardIcon } from "./JokerCardIcon";
 
@@ -64,10 +65,13 @@ export function OrganizerTablePanel({ game, isBusy, onAdd, onRename, onRemove, o
         </button>
       </div>
       <div className="shared-game-settings" aria-label="Game settings">
-        <span>{game.cardsPerPlayer} commanders each</span>
+        <span><Crown className="setting-icon" /> {game.cardsPerPlayer} commanders each</span>
         <span><JokerCardIcon size={18} /> {game.jokersPerPlayer} jokers each</span>
       </div>
       <button className="draw-button" type="button" onClick={onNewGame} disabled={isBusy || game.players.length === 0}>
+        <span className="roulette-symbol roulette-symbol-button" aria-hidden="true">
+          <img src={brandLogo} alt="" />
+        </span>
         New game
       </button>
     </section>

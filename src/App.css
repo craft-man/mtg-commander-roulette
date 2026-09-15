@@ -1028,19 +1028,24 @@ h3 {
 }
 
 .transform-button {
+  position: absolute;
+  z-index: 4;
+  bottom: -21px;
+  left: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: calc(100% - 20px);
-  min-height: 44px;
-  margin: 0 10px 10px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  margin: 0;
+  padding: 0;
   border: 1px solid #b5c9bc;
-  border-radius: 8px;
-  color: #3c725e;
+  border-radius: 50%;
+  color: #315f4e;
   background: #f3f8f4;
-  font-size: 0.76rem;
-  font-weight: 800;
+  transform: translateX(-50%);
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
@@ -1050,7 +1055,7 @@ h3 {
 }
 
 .transform-button:active {
-  transform: translateY(1px);
+  transform: translateX(-50%) translateY(1px);
 }
 
 .commander-resource-links {
@@ -1523,7 +1528,7 @@ h3 {
 .draw-player-heading h3 { font-family: Georgia, serif; font-size: 1.5rem; font-weight: 400; }
 .commander-card-content { padding: 14px 0 10px; }
 .commander-resource-links { padding: 0; }
-.commander-resource-link { justify-content: flex-start; border: 0; font-weight: 600; }
+.commander-resource-link { justify-content: flex-start; min-height: 36px; padding: 7px 9px; border: 0; font-weight: 600; }
 button:disabled { opacity: 0.6; }
 .brand:hover .brand-name, .commander-card-link:hover .commander-name { color: var(--copper-text); }
 .add-player-button:hover:not(:disabled) { color: var(--copper-text); background: var(--copper-wash); }
@@ -1605,6 +1610,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid #719c83; outline-offs
 .collaborative-layout {
   grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
   gap: 52px;
+}
+
+@media (min-width: 761px) {
+  .collaborative-layout .commander-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 24px);
+  }
 }
 
 .organizer-panel {
