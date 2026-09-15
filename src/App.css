@@ -1041,17 +1041,17 @@ h3 {
   min-height: 42px;
   margin: 0;
   padding: 0;
-  border: 1px solid #b5c9bc;
+  border: 1px solid #a9653a;
   border-radius: 50%;
-  color: #315f4e;
-  background: #f3f8f4;
+  color: #24180f;
+  background: var(--copper);
   transform: translateX(-50%);
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .transform-button:hover {
-  border-color: #7fa891;
-  background: #e2efe6;
+  border-color: #8f4f2b;
+  background: var(--copper-hover);
 }
 
 .transform-button:active {
@@ -1479,9 +1479,9 @@ h3 {
   }
 
   .transform-button {
-    border-color: #4d6859;
-    color: #aad3b9;
-    background: #20362b;
+    border-color: #a9653a;
+    color: #24180f;
+    background: var(--copper);
   }
 
   .transform-button:hover {
@@ -1527,6 +1527,7 @@ h3 {
 .panel-heading h2, .results-heading h2 { font-family: Georgia, serif; font-weight: 400; font-size: 2.2rem; }
 .draw-player-heading h3 { font-family: Georgia, serif; font-size: 1.5rem; font-weight: 400; }
 .commander-card-content { padding: 14px 0 10px; }
+.commander-card.has-transform .commander-card-content { padding-top: 31px; }
 .commander-resource-links { padding: 0; }
 .commander-resource-link { justify-content: flex-start; min-height: 36px; padding: 7px 9px; border: 0; font-weight: 600; }
 button:disabled { opacity: 0.6; }

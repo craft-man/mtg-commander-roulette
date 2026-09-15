@@ -31,7 +31,7 @@ export function CommanderCard({
 
   return (
     <article
-      className={`commander-card${isTransformed ? " is-transformed" : ""}${isLocked ? " is-locked" : ""}`}
+      className={`commander-card${isTransformed ? " is-transformed" : ""}${isLocked ? " is-locked" : ""}${canTransform ? " has-transform" : ""}`}
     >
       <div className="commander-card-media">
         {onToggleLock ? (
