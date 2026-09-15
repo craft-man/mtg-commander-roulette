@@ -28,7 +28,7 @@ Each player picks one of their drawn commanders, builds a deck around it, and me
 2. Use **Add player** to set up your table and enter everyone's name.
 3. Set **Commanders per player** and click **Draw commanders**.
 4. Choose one commander from your options. Follow the card's Scryfall link or its **EDHREC** link for more information and deckbuilding ideas.
-5. Use **Share link** to send the table a read-only copy of the draw.
+5. Use **Share table** when you are ready to publish the draw. Copy one private link per player; each player can only see, fix, and reroll their own line. A separate spectator link shows the whole table without controls.
 
 ## Features
 
@@ -38,7 +38,7 @@ Each player picks one of their drawn commanders, builds a deck around it, and me
 - **Late arrivals:** add a player after a draw and deal their options without redrawing the others.
 - **Card languages:** English, Spanish, French, German, Italian, and Japanese. The interface itself is in English; the selector changes the card prints.
 - **Double-faced cards:** use **Transform** to view the other face when available.
-- **Shareable draws:** player names and commander identifiers are encoded in the link, which opens in read-only mode.
+- **Optional collaborative tables:** publish a completed local draw only when you want to share it. Player links are private, revocable, and limited to one line; spectator links are read-only.
 - **Responsive layout:** works on desktop and mobile, with light and dark themes following your system preference.
 
 ## Card data and storage
@@ -47,7 +47,9 @@ Card data and images come from [Scryfall](https://scryfall.com/) through the ded
 
 Commander data is cached in your browser for 24 hours per language, while API responses are also cached by Vercel's CDN. Brief network failures are retried automatically.
 
-There is no account or server-side draw database. Save a share link if you want to revisit a result. Anyone with that link can read the included player names and selections.
+Local draws stay in your browser until you publish them. A published table stores player names, commander Oracle IDs, locks, and remaining jokers for up to 30 days after the last change. The organiser can revoke and regenerate player or spectator links at any time. URLs keep their access token in the hash fragment, so it is not sent to the server as part of the request URL.
+
+Legacy `#share=…` links still open as read-only snapshots.
 
 ## Run locally
 
@@ -67,7 +69,7 @@ npm test       # Run the test suite
 npm run build # Type-check and create the production build in dist/
 ```
 
-Copy `.env.example` to `.env.local` and set `VITE_COMMANDER_API_URL` to the local or deployed Commander Roulette API URL.
+Copy `.env.example` to `.env.local` and set `VITE_COMMANDER_API_URL` to the local or deployed Commander Roulette API URL. Publishing a collaborative table also needs `COMMANDER_API_URL`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, and `CRON_SECRET` in the Vercel project environment.
 
 ## Deploy on Vercel
 
@@ -78,9 +80,9 @@ Import the repository into Vercel with these settings:
 | Framework preset | Vite |
 | Build command | `npm run build` |
 | Output directory | `dist` |
-| Environment variables | `VITE_COMMANDER_API_URL` |
+| Environment variables | `VITE_COMMANDER_API_URL`, `COMMANDER_API_URL`, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, `CRON_SECRET` |
 
-The current app uses `#share=…` links rather than server-side routes, so no custom routing configuration is needed.
+Provision a Neon Postgres database from the Vercel Marketplace, set `DATABASE_URL`, then run `npm run db:migrate` once against that database before deploying. The root `api/` directory contains the Vercel Functions and `vercel.json` schedules the daily expiry cleanup.
 
 ## Built with
 

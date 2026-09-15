@@ -10,6 +10,7 @@ interface DrawResultsProps {
   onRerollAll?: () => void;
   onRerollPlayer?: (playerId: string) => void;
   onShare?: () => void;
+  shareLabel?: string;
   shareStatus?: string | null;
   announcement?: { id: number; message: string } | null;
   playerGameStates?: PlayerGameStates;
@@ -23,6 +24,7 @@ export function DrawResults({
   onRerollAll,
   onRerollPlayer,
   onShare,
+  shareLabel = "Share table",
   shareStatus,
   announcement,
   playerGameStates = {},
@@ -67,21 +69,25 @@ export function DrawResults({
             Each player chooses one of their drawn commanders, then builds a deck around it.
           </p>
         </div>
-        {!readOnly ? (
+        {!readOnly && (onShare || onRerollAll) ? (
           <div className="results-actions">
-            <button className="secondary-button" type="button" onClick={onShare}>
-              <Copy size={18} weight="bold" />
-              Share link
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={onRerollAll}
-              disabled={isRerolling || !canRerollAny}
-            >
-              <ArrowsClockwise size={19} weight="bold" />
-              Reroll all
-            </button>
+            {onShare ? (
+              <button className="secondary-button" type="button" onClick={onShare}>
+                <Copy size={18} weight="bold" />
+                {shareLabel}
+              </button>
+            ) : null}
+            {onRerollAll ? (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={onRerollAll}
+                disabled={isRerolling || !canRerollAny}
+              >
+                <ArrowsClockwise size={19} weight="bold" />
+                Reroll all
+              </button>
+            ) : null}
             {shareStatus ? (
               <p className="results-status" role="status">
                 {shareStatus}
@@ -105,7 +111,7 @@ export function DrawResults({
           return <article className="player-draw" key={draw.player.id}>
             <div className="draw-player-heading">
               <h3>{draw.player.name || "Unnamed player"}</h3>
-              {!readOnly ? (
+              {!readOnly && onRerollPlayer ? (
                 <div className="player-reroll-controls">
                   {gameState ? (
                   <span

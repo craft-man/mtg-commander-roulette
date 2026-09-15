@@ -4,11 +4,11 @@ import type { PlayerDraw } from "../models/PlayerDraw";
 import { randomIndex } from "./random";
 
 export function drawCommanders(pool: Commander[], count: number): Commander[] {
-  if (!Number.isSafeInteger(count) || count < 1 || count > pool.length) {
+  const available = deduplicateByOracleId(pool);
+  if (!Number.isSafeInteger(count) || count < 1 || count > available.length) {
     throw new Error("Not enough commanders available for this draw.");
   }
 
-  const available = [...pool];
   const result: Commander[] = [];
 
   for (let index = 0; index < count; index += 1) {
@@ -23,15 +23,14 @@ export function drawForPlayers(
   pool: Commander[],
   commandersPerPlayer = 3,
 ): PlayerDraw[] {
+  const available = deduplicateByOracleId(pool);
   if (
     !Number.isSafeInteger(commandersPerPlayer) ||
     commandersPerPlayer < 1 ||
-    players.length * commandersPerPlayer > pool.length
+    players.length * commandersPerPlayer > available.length
   ) {
     throw new Error("Not enough commanders available for this draw.");
   }
-
-  const available = [...pool];
 
   return players.map((player) => ({
     player,
@@ -51,9 +50,11 @@ export function rerollPlayers(
   }
 
   const assignedIds = new Set(
-    draws.flatMap((draw) => draw.commanders.map((commander) => commander.id)),
+    draws.flatMap((draw) => draw.commanders.map((commander) => commander.oracleId)),
   );
-  const available = pool.filter((commander) => !assignedIds.has(commander.id));
+  const available = deduplicateByOracleId(pool).filter(
+    (commander) => !assignedIds.has(commander.oracleId),
+  );
   const replacementCount = targets.reduce((count, draw) => {
     const lockedIds = lockedCommanderOracleIds.get(draw.player.id) ?? new Set<string>();
     return count + draw.commanders.filter((commander) => !lockedIds.has(commander.oracleId)).length;
@@ -102,4 +103,13 @@ function drawCommandersFromPool(pool: Commander[], count: number): Commander[] {
     result.push(pool.splice(randomIndex(pool.length), 1)[0]);
   }
   return result;
+}
+
+function deduplicateByOracleId(pool: Commander[]): Commander[] {
+  const seen = new Set<string>();
+  return pool.filter((commander) => {
+    if (seen.has(commander.oracleId)) return false;
+    seen.add(commander.oracleId);
+    return true;
+  });
 }

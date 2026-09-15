@@ -35,6 +35,17 @@ describe("commander draw", () => {
     );
   });
 
+  it("treats distinct print ids with the same oracle id as one commander", () => {
+    const duplicatePrints = [
+      ...commanders.slice(0, 5),
+      { ...commanders[0], id: "commander-0-alt-art" },
+    ];
+
+    expect(() => drawForPlayers(players, duplicatePrints)).toThrow(
+      "Not enough commanders available for this draw.",
+    );
+  });
+
   it("uses the requested number of commanders per player", () => {
     const draws = drawForPlayers(players, commanders, 5);
     const drawnCommanders = draws.flatMap((draw) => draw.commanders);

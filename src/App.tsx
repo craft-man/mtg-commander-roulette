@@ -1,10 +1,17 @@
 import { CaretDown } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import brandLogo from "./assets/commander-roulette-logo.png";
 import { DrawResults } from "./components/DrawResults";
 import { NewGameDialog } from "./components/NewGameDialog";
+import { OrganizerTablePanel } from "./components/OrganizerTablePanel";
 import { PlayerList } from "./components/PlayerList";
+import { ShareTableDialog } from "./components/ShareTableDialog";
 import { useCommanders } from "./hooks/useCommanders";
+import type {
+  CollaborativeAccess,
+  CollaborativeGameView,
+  OrganizerGameView,
+} from "./models/CollaborativeGame";
 import type { PlayerGameStates } from "./models/PlayerGameState";
 import type { Player } from "./models/Player";
 import type { PlayerDraw } from "./models/PlayerDraw";
@@ -13,6 +20,25 @@ import {
   COMMANDER_LOAD_ERROR,
   type CardLanguage,
 } from "./services/commanderApi";
+import {
+  addSharedPlayer,
+  fetchGame,
+  GameApiError,
+  publishGame,
+  removeSharedPlayer,
+  rerollSharedPlayer,
+  resetSharedGame,
+  rotateSharedAccess,
+  setSharedCommanderLock,
+  updateSharedLanguage,
+  updateSharedPlayer,
+} from "./services/gameApi";
+import {
+  createCollaborativeUrl,
+  createPublishGameInput,
+  hydrateGameSnapshot,
+  readCollaborativeAccess,
+} from "./utils/collaborative";
 import { drawForPlayers, rerollPlayers } from "./utils/draw";
 import {
   createPlayerGameState,
@@ -21,7 +47,7 @@ import {
   lockedCommanderMap,
   spendJokers,
 } from "./utils/game";
-import { createShareUrl, hydrateSharedDraw, readSharedDraw } from "./utils/share";
+import { hydrateSharedDraw, readSharedDraw } from "./utils/share";
 
 function createPlayerId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
@@ -35,7 +61,14 @@ function normalisePlayers(players: Player[]): Player[] {
 }
 
 export default function App() {
-  const [sharedDraw] = useState(() => readSharedDraw(window.location.hash));
+  const [collaborativeAccess, setCollaborativeAccess] = useState<CollaborativeAccess | null>(() =>
+    readCollaborativeAccess(window.location.hash),
+  );
+  const [publishedView, setPublishedView] = useState<OrganizerGameView | null>(null);
+  const [openShareAfterPublish, setOpenShareAfterPublish] = useState(false);
+  const [sharedDraw] = useState(() =>
+    readCollaborativeAccess(window.location.hash) ? null : readSharedDraw(window.location.hash),
+  );
   const [players, setPlayers] = useState<Player[]>([]);
   const [cardsPerPlayer, setCardsPerPlayer] = useState(3);
   const [jokersPerPlayer, setJokersPerPlayer] = useState(2);
@@ -50,6 +83,7 @@ export default function App() {
   } | null>(null);
   const [isNewGameDialogOpen, setIsNewGameDialogOpen] = useState(false);
   const [isRerolling, setIsRerolling] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const [isSharedLoading, setIsSharedLoading] = useState(Boolean(sharedDraw));
   const { getCommanders, isLoading, error, clearError } = useCommanders();
@@ -136,9 +170,9 @@ export default function App() {
       );
       setDraws((current) => {
         const assignedIds = new Set(
-          current.flatMap((draw) => draw.commanders.map((commander) => commander.id)),
+          current.flatMap((draw) => draw.commanders.map((commander) => commander.oracleId)),
         );
-        const available = pool.filter((commander) => !assignedIds.has(commander.id));
+        const available = pool.filter((commander) => !assignedIds.has(commander.oracleId));
         const newDraw = drawForPlayers([preparedPlayer], available, cardsPerPlayer)[0];
         return [...current, newDraw].sort(
           (first, second) =>
@@ -299,13 +333,23 @@ export default function App() {
   };
 
   const shareDraw = async () => {
-    const url = createShareUrl(draws, language, window.location);
+    if (draws.length === 0 || isPublishing) return;
     setShareStatus(null);
+    setActionError(null);
+    setIsPublishing(true);
     try {
-      await navigator.clipboard.writeText(url);
-      setShareStatus("Share link copied to your clipboard.");
-    } catch {
-      setActionError("Your browser could not copy the share link.");
+      const result = await publishGame(
+        createPublishGameInput(draws, playerGameStates, language, cardsPerPlayer, jokersPerPlayer),
+      );
+      const access = { gameId: result.view.game.id, token: result.organizerToken };
+      window.history.replaceState(null, "", createCollaborativeUrl(access.gameId, access.token, window.location));
+      setPublishedView(result.view);
+      setOpenShareAfterPublish(true);
+      setCollaborativeAccess(access);
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "This table could not be published.");
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -348,7 +392,17 @@ export default function App() {
       ? "New game"
       : "Draw commanders";
   const isBlockingLoad = isLoading && (draws.length === 0 || isChangingLanguage);
-  const isActionInProgress = isLoading || isRerolling || isChangingLanguage;
+  const isActionInProgress = isLoading || isRerolling || isChangingLanguage || isPublishing;
+
+  if (collaborativeAccess) {
+    return (
+      <CollaborativeGameApp
+        access={collaborativeAccess}
+        initialView={publishedView}
+        openShareOnLoad={openShareAfterPublish}
+      />
+    );
+  }
 
   if (sharedDraw) {
     return (
@@ -426,6 +480,7 @@ export default function App() {
                 onRerollAll={rerollAll}
                 onRerollPlayer={rerollOne}
                 onShare={shareDraw}
+                shareLabel={isPublishing ? "Publishing table..." : "Share table"}
                 shareStatus={shareStatus}
                 announcement={resultAnnouncement}
                 playerGameStates={playerGameStates}
@@ -442,6 +497,290 @@ export default function App() {
         onConfirm={startNewGame}
       />
       {isBlockingLoad ? <InitialLoadOverlay isLanguageChange={isChangingLanguage} /> : null}
+    </>
+  );
+}
+
+function CollaborativeGameApp({
+  access,
+  initialView,
+  openShareOnLoad,
+}: {
+  access: CollaborativeAccess;
+  initialView: OrganizerGameView | null;
+  openShareOnLoad: boolean;
+}) {
+  const [view, setView] = useState<CollaborativeGameView | null>(initialView);
+  const [draws, setDraws] = useState<PlayerDraw[]>([]);
+  const [playerGameStates, setPlayerGameStates] = useState<PlayerGameStates>({});
+  const [error, setError] = useState<string | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(!initialView);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isShareOpen, setIsShareOpen] = useState(openShareOnLoad);
+  const [isNewGameDialogOpen, setIsNewGameDialogOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState<{ id: number; message: string } | null>(null);
+  const etagRef = useRef<string | null>(null);
+  const requestInFlight = useRef(false);
+  const { getCommanders, isLoading: isLoadingCommanders, error: commanderError } = useCommanders();
+
+  const announce = (message: string) => {
+    setAnnouncement((current) => ({ id: (current?.id ?? 0) + 1, message }));
+  };
+
+  const refresh = useCallback(async (silent = false) => {
+    if (requestInFlight.current || !navigator.onLine) return;
+    requestInFlight.current = true;
+    if (!silent) setIsRefreshing(true);
+    try {
+      const result = await fetchGame(access.gameId, access.token, etagRef.current);
+      etagRef.current = result.etag;
+      if (result.view) setView(result.view);
+      setError(null);
+      setIsOffline(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The shared table could not be loaded.");
+    } finally {
+      requestInFlight.current = false;
+      if (!silent) setIsRefreshing(false);
+    }
+  }, [access.gameId, access.token]);
+
+  useEffect(() => {
+    if (!initialView) void refresh();
+  }, [initialView, refresh]);
+
+  useEffect(() => {
+    const poll = () => {
+      if (document.visibilityState === "visible" && navigator.onLine) void refresh(true);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") poll();
+    };
+    const onOnline = () => {
+      setIsOffline(false);
+      poll();
+    };
+    const onOffline = () => setIsOffline(true);
+    const interval = window.setInterval(poll, 3_000);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!view) return;
+    let isCurrent = true;
+    setDraws([]);
+    getCommanders(view.game.language)
+      .then((commanders) => {
+        if (!isCurrent) return;
+        const hydrated = hydrateGameSnapshot(view.game, commanders);
+        setDraws(hydrated.draws);
+        setPlayerGameStates(hydrated.playerGameStates);
+      })
+      .catch((cause) => {
+        if (isCurrent) setError(cause instanceof Error ? cause.message : "Commander cards could not be loaded.");
+      });
+    return () => { isCurrent = false; };
+  }, [getCommanders, view]);
+
+  const applyMutation = async (
+    mutation: () => Promise<CollaborativeGameView>,
+    successMessage: string,
+  ) => {
+    if (isBusy || !navigator.onLine) {
+      if (!navigator.onLine) setIsOffline(true);
+      return;
+    }
+    setIsBusy(true);
+    setError(null);
+    try {
+      const nextView = await mutation();
+      etagRef.current = null;
+      setView(nextView);
+      announce(successMessage);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "The shared table could not be updated.";
+      setError(message);
+      if (cause instanceof GameApiError && cause.status === 409) await refresh(true);
+      throw cause;
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const playerView = view?.role === "player" ? view : null;
+  const organizerView = view?.role === "organizer" ? view : null;
+  const player = playerView?.game.players[0];
+
+  const rerollPlayer = async () => {
+    if (!player) return;
+    try {
+      await applyMutation(
+        () => rerollSharedPlayer(access.gameId, access.token, player.revision),
+        `${player.name}'s unfixed commanders have been redrawn.`,
+      );
+    } catch {
+      // The shared error message and refreshed state are already visible.
+    }
+  };
+
+  const toggleLock = async (_playerId: string, oracleId: string) => {
+    if (!player) return;
+    const locked = !player.lockedCommanderOracleIds.includes(oracleId);
+    try {
+      await applyMutation(
+        () => setSharedCommanderLock(access.gameId, access.token, oracleId, locked, player.revision),
+        `${locked ? "Commander fixed" : "Commander released"}.`,
+      );
+    } catch {
+      // The shared error message and refreshed state are already visible.
+    }
+  };
+
+  const organizerMutation = async (
+    mutation: () => Promise<CollaborativeGameView>,
+    message: string,
+  ) => {
+    try {
+      await applyMutation(mutation, message);
+    } catch {
+      // Keep the management form available with the server error in context.
+    }
+  };
+
+  const roleLabel = view?.role === "organizer"
+    ? "Table keeper · shared game"
+    : view?.role === "player"
+      ? "Your private draw"
+      : "Spectator view · read only";
+  const visibleError = error ?? commanderError;
+  const isInitialLoad = isRefreshing && !view;
+
+  if (!view && !isInitialLoad) {
+    return (
+      <main className="app-shell shared-app-shell">
+        <header className="app-header"><Brand /></header>
+        <section className="shared-fatal-state" role="alert">
+          <h1>This table is out of reach</h1>
+          <p>{visibleError || "The private link is invalid, revoked, or expired."}</p>
+          <button className="secondary-button" type="button" onClick={() => refresh()}>Try again</button>
+        </section>
+        <SiteFooter />
+      </main>
+    );
+  }
+
+  return (
+    <>
+      <main className={`app-shell${organizerView ? "" : " shared-app-shell"}`} inert={isInitialLoad}>
+        <header className="app-header">
+          <Brand />
+          <div className="header-tools">
+            <p>{roleLabel}</p>
+            <LanguageSelect
+              language={view?.game.language ?? "en"}
+              onChange={organizerView ? (language) => void organizerMutation(
+                () => updateSharedLanguage(access.gameId, access.token, language),
+                "Card language updated for the table.",
+              ) : undefined}
+              disabled={!organizerView || isBusy}
+            />
+          </div>
+        </header>
+
+        {isOffline ? <p className="connection-banner" role="status">You are offline. Your last loaded draw stays visible; actions will resume when the connection returns.</p> : null}
+        {visibleError ? <p className="error-message shared-error" role="alert">{visibleError}</p> : null}
+        {isInitialLoad || (isLoadingCommanders && draws.length === 0) ? <LoadingResults /> : null}
+
+        {view && draws.length > 0 ? organizerView ? (
+          <div className="app-layout collaborative-layout">
+            <section className="pod-stage">
+              <OrganizerTablePanel
+                game={organizerView.game}
+                isBusy={isBusy}
+                onAdd={(name) => organizerMutation(
+                  () => addSharedPlayer(access.gameId, access.token, name),
+                  `${name} joined the table and received a draw.`,
+                )}
+                onRename={(playerId, name) => organizerMutation(
+                  () => updateSharedPlayer(access.gameId, access.token, playerId, name),
+                  `Player renamed to ${name}.`,
+                )}
+                onRemove={async (playerId) => {
+                  const name = organizerView.game.players.find((candidate) => candidate.id === playerId)?.name || "This player";
+                  if (!window.confirm(`Remove ${name}? Their private link will stop working immediately.`)) return;
+                  await organizerMutation(
+                    () => removeSharedPlayer(access.gameId, access.token, playerId),
+                    `${name} left the table.`,
+                  );
+                }}
+                onNewGame={() => setIsNewGameDialogOpen(true)}
+              />
+            </section>
+            <div className="results-column">
+              <DrawResults
+                draws={draws}
+                isRerolling={isBusy}
+                onShare={() => setIsShareOpen(true)}
+                shareLabel="Table links"
+                announcement={announcement}
+                playerGameStates={playerGameStates}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="collaborative-results">
+            <DrawResults
+              draws={draws}
+              isRerolling={isBusy}
+              onRerollPlayer={playerView ? () => void rerollPlayer() : undefined}
+              announcement={announcement}
+              playerGameStates={playerGameStates}
+              onToggleLock={playerView ? toggleLock : undefined}
+              readOnly={view.role === "spectator"}
+            />
+          </div>
+        ) : null}
+        <SiteFooter />
+      </main>
+
+      {organizerView ? (
+        <ShareTableDialog
+          isOpen={isShareOpen}
+          view={organizerView}
+          isBusy={isBusy}
+          onClose={() => setIsShareOpen(false)}
+          onRotate={async (target, playerId) => {
+            setIsBusy(true);
+            try {
+              const next = await rotateSharedAccess(access.gameId, access.token, target, playerId);
+              setView(next);
+              announce(`${target === "spectator" ? "Spectator" : "Player"} link replaced.`);
+            } finally {
+              setIsBusy(false);
+            }
+          }}
+        />
+      ) : null}
+      {organizerView ? (
+        <NewGameDialog
+          isOpen={isNewGameDialogOpen}
+          onCancel={() => setIsNewGameDialogOpen(false)}
+          onConfirm={() => void organizerMutation(
+            () => resetSharedGame(access.gameId, access.token),
+            "A new game is ready. Player links are unchanged and jokers are restored.",
+          ).finally(() => setIsNewGameDialogOpen(false))}
+        />
+      ) : null}
+      {isInitialLoad ? <InitialLoadOverlay /> : null}
     </>
   );
 }

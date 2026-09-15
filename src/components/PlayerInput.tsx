@@ -19,6 +19,7 @@ export function PlayerInput({ player, onChange, onRemove, onDraw, disabled = fal
         id={`player-${player.id}`}
         className="player-name-input"
         value={player.name}
+        maxLength={80}
         disabled={disabled}
         onChange={(event) => onChange(player.id, event.target.value)}
         placeholder="Player name"
